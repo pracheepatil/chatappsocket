@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#define PORT "3498"
 
 void error(char* msg){
 	perror(msg);
@@ -15,43 +14,40 @@ void error(char* msg){
 int main()
 {
 
+  int sockfd, result,newsockfd,n;
+  char buffer[255];
+  struct addrinfo servaddr, *servinfo , *dup;
+  struct sockaddr_storage connector_addr;
 
-int sockfd, result,newsockfd, n, bind_res;
-char buffer[255];
-struct addrinfo servaddr, *servinfo, *dup;
-struct sockaddr_storage connector_addr;
+  memset(&servaddr, 0, sizeof(servaddr));
 
-memset(&servaddr, 0, sizeof(servaddr));
+  servaddr.ai_family = AF_INET;
+  servaddr.ai_socktype = SOCK_STREAM;
+  servaddr.ai_flags = AI_PASSIVE;
 
-servaddr.ai_family = AF_INET;
-servaddr.ai_socktype = SOCK_STREAM;
-servaddr.ai_flags = AI_PASSIVE;
-
-
-
-result = getaddrinfo(NULL, PORT, &servaddr, &servinfo);
-if (result != 0){
-	printf("error");
-    return 1;
-	
-}
-//else{
-	//printf("error");
-//	return -1;
-//}
-//printf("%d: ", result);
-   sockfd = socket(dup->ai_family, dup->ai_socktype, 0);
+  result = getaddrinfo("localhost", "3400", &servaddr, &servinfo);
+  if (result != 0){
+	printf("error");   
+  }
+for(dup = servinfo; dup != NULL; dup = dup->ai_next){
+   sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
    if(sockfd < 0){
 	 error("unable to create socket");
    }
 
-   printf("hello %d", sockfd);
-
-   bind_res = bind(sockfd, dup->ai_addr, dup->ai_addrlen);
-   if (bind_res < 0){
-       error("unable to bind");
+   if(bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1){
+     error("unable to bind");
    }
-   if(listen(sockfd, 5) < 0){
+   break;
+}
+  
+  freeaddrinfo(dup);
+  if(dup == NULL){
+      error("return ");
+  }
+  
+if(listen(sockfd, 5) == -1)
+   {
 	   error("unable to listen");
    }
    
@@ -82,7 +78,6 @@ if (result != 0){
             break;
         }
 
- 
     close(newsockfd);
 	close(sockfd);
 	

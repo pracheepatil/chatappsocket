@@ -9,25 +9,25 @@
 #define PORT "3400"
 
 void error(char* msg){
-	perror(msg);
+	perror(msg);	
 	exit(1);
 }
 
 int main(int argc, char *argv[]){
+	if (argc != 3) {
+		fprintf(stderr, "ERROR: usage: %s domain port", argv[0]);
+		return -1;
+	}
 	
 	int sockfd, n;
 	struct addrinfo servaddr, *servinfo, *dup;
 	int result, con_res;
 	char buffer[255];
-	memset(&servaddr, 0, sizeof(servaddr));
+	memset(&servaddr, 0, sizeof servaddr);
 	servaddr.ai_family = AF_INET;
 	servaddr.ai_socktype = SOCK_STREAM;
-	
-	if(argc != 2){
-		error("please provide client hostname");
-	}
-	
-	result = getaddrinfo(argv[1], PORT, &servaddr, &servinfo);
+	servaddr.ai_flags = AI_PASSIVE;
+	result = getaddrinfo(argv[1], argv[2], &servaddr, &servinfo);
 	if(result < 0 ){
 		error("errorr......");
 	}
@@ -35,8 +35,8 @@ int main(int argc, char *argv[]){
 	if(sockfd < 0){
 		error("unable to create socket");
 	}
-	con_res = connect(sockfd, dup->ai_addr, dup->ai_addrlen);
-	if(con_res < 0){
+	con_res = connect(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
+	if(con_res == -1){
 		error("Unable to connect");
 	}
 	
@@ -59,6 +59,6 @@ int main(int argc, char *argv[]){
 		if(i == 0)
 		break;
 	}
-	
+
 	return 0;
 }
